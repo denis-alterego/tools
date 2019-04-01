@@ -9,25 +9,88 @@ use \Monolog\Formatter\LogstashFormatter;
 class Js
 {
     /*
-     * @var string идентификато COOKIE
+     * идентификато COOKIE
+     *
+     * @access private
+     * @var string
      */
     private $cookieKey = '';
+
     /**
-     * @var string Уникальный идентификатор пользователя
+     * Уникальный идентификатор пользователя
+     *
+     * @access private
+     * @var string
      */
     private $userUniq = '';
+
     /**
-     * @var string Путь к обработчику запроса
+     * Путь к обработчику запроса
+     *
+     * @access private
+     * @var string
      */
     private $handler = '';
+
     /**
-     * @var string Путь для записи логов
+     * Путь для записи логов
+     *
+     * @access private
+     * @var string
      */
     private $logPath = '';
+
     /**
-     * @var int Идентификатор текущего пользователя
+     * Идентификатор текущего пользователя
+     *
+     * @access private
+     * @var int
      */
     private $userId = 0;
+
+    /**
+     * Идентификатор сайта
+     *
+     * @access private
+     * @var string
+     */
+    private $siteId = '';
+
+    /**
+     * Имя проекта
+     *
+     * @access private
+     * @var string
+     */
+    private $appName = '';
+
+    /**
+     * Массив ключей для проверки входных данных
+     * @access private
+     * @var array
+     */
+    private $dataKeys = [
+        'useragent',
+        'url',
+        'message',
+        'user_uniq',
+        'platform',
+        'innerWidth',
+        'innerHeight',
+        'line',
+        'referer',
+        'user_id',
+        'maxTouchPoints',
+        'vendor',
+    ];
+
+    /**
+     * Данные для логирования
+     *
+     * @access private
+     * @var array
+     */
+    private $data = [];
 
     /**
      *
@@ -47,10 +110,12 @@ class Js
     private function initParams(array $params)
     {
         $this->cookieKey = $params['cookieKey'] ?? 'jsmonitor';
-        $this->userUniq = $_COOKIE[$this->cookieKey] ? htmlspecialchars($_COOKIE[$this->cookieKey]) : '';
+        $this->userUniq = isset($_COOKIE[$this->cookieKey]) ? htmlspecialchars($_COOKIE[$this->cookieKey]) : '';
         $this->handler = $params['handler'] ?? '/js_server.php';
         $this->logPath = $params['logPath'] ?? '/upload/logs/monolog/kibana/app.log';
         $this->userId = $params['userId'] ?? 0;
+        $this->siteId = $params['siteId'] ?? '';
+        $this->appName = $params['appName'] ?? '';
     }
 
     /**
@@ -58,7 +123,7 @@ class Js
      *
      * @return string
      */
-    public function getJs()
+    public function getJs(): string
     {
         $js = <<<JS
         var user_uniq = '{$this->userUniq}';
@@ -66,6 +131,7 @@ class Js
         
         var error_log_url = '{$this->handler}';
         var user_id = {$this->userId};
+        
 JS;
 
         return $js . file_get_contents(__DIR__ . '/monitoring.js');
@@ -73,17 +139,37 @@ JS;
 
     /**
      * Обработчик запроса логирования
+     *
+     * @param array $data Данные для логирования
      */
-    public function handler()
+    public function handler(array $data = [])
     {
         // Отправляем нужные заголовки
         $this->initHeader();
 
+        // Инициализируем данные по умолчанию
+        $this->initData($data);
+
         // Если запрос подходит по условиям
-        if ($this->check()) {
+        if ($this->checkInputData($data)) {
             // записуем в лог
             $this->writeLog();
         }
+    }
+
+    /**
+     * Формируем массив данных для логирования
+     *
+     * @param array $data
+     */
+    private function initData(array $data)
+    {
+        $_data = [];
+        foreach ($this->dataKeys as $key) {
+            $_data[$key] = $data[$key] ? htmlspecialchars($data[$key]) : '';
+        }
+
+        $this->data = $_data;
     }
 
     /**
@@ -97,26 +183,27 @@ JS;
     /**
      * Проверяем параметры, не бот ли
      *
+     * @param array $data Входные данные
      * @return bool
      */
-    private function check()
+    private function checkInputData(array $data): bool
     {
         if (
             strpos($_SERVER['HTTP_REFERER'], $_SERVER['SERVER_NAME']) == false // Не нашли домена в referer пропускаем такой запрос
             ||
-            strpos($_REQUEST['useragent'], "Googlebot") !== false // Отсеиваем Гуглобота
+            strpos($this->data['useragent'], "Googlebot") !== false // Отсеиваем Гуглобота
             ||
-            strpos($_REQUEST['useragent'], "Google-Adwords") !== false // Отсеиваем Гуглобота
+            strpos($this->data['useragent'], "Google-Adwords") !== false // Отсеиваем Гуглобота
             ||
-            strpos($_REQUEST['useragent'], "YandexBot") !== false // Отсеиваем Яндексбота
+            strpos($this->data['useragent'], "YandexBot") !== false // Отсеиваем Яндексбота
             ||
-            empty($_REQUEST['url']) // По каким-то причинам url ошибки неизвестен
+            empty($this->data['url']) // По каким-то причинам url ошибки неизвестен
             ||
-            $_REQUEST['url'] == 'undefined' // По каким-то причинам url ошибки неизвестен
+            $this->data['url'] == 'undefined' // По каким-то причинам url ошибки неизвестен
             ||
-            strpos($_REQUEST['message'], "Uncaught InvalidPointerId") !== false // Ошибки pointer id не логируем
+            strpos($this->data['message'], "Uncaught InvalidPointerId") !== false // Ошибки pointer id не логируем
         ) {
-            return fasle;
+            return false;
         }
 
         return true;
@@ -127,44 +214,45 @@ JS;
      */
     private function writeLog()
     {
-        $uniq = $_REQUEST['user_uniq'];
+        $uniq = $this->data['user_uniq'];
+
         // Если ничего не пришло, то генерим пользователю новый уникальный идентификатор и пишем его в куки
         if (empty($uniq)) {
             // А давай попробуем посмотреть в сессии и в $_COOKIES
-            $uniq = !empty($_COOKIE[$this->cookieKey]) ? $_COOKIE[$this->cookieKey] : $_SESSION[$this->cookieKey];
+            $uniq = !empty($_COOKIE[$this->cookieKey]) ? $_COOKIE[$this->cookieKey] : !empty($_SESSION[$this->cookieKey]) ? $_SESSION[$this->cookieKey] : '';
             // Все еще ничего не нашли?
             if (empty($uniq)) {
-                $uniq = md5($_REQUEST['platform'] . $_REQUEST['useragent'] . $_REQUEST['innerHeight'] . time());
+                $uniq = md5($this->data['platform'] . $this->data['useragent'] . $this->data['innerHeight'] . time());
                 setcookie($this->cookieKey, $uniq, time() + 3600 * 999, "/", $_SERVER['SERVER_NAME'], 1);
                 $_SESSION[$this->cookieKey] = $uniq;
             }
         }
 
         $userIp = !empty($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
-        $errorHash = md5($_REQUEST['url'] . $_REQUEST['line'] . SITE_ID);
+        $errorHash = md5($this->data['url'] . $this->data['line'] . $this->siteId);
 
         $data = [
-            "UF_MESSAGE" => htmlspecialchars($_REQUEST['message']),
-            "UF_LINE" => htmlspecialchars($_REQUEST['line']),
-            "UF_URL" => htmlspecialchars($_REQUEST['url']),
-            "UF_REFERER" => htmlspecialchars($_REQUEST['referer']),
-            "UF_USER_ID" => htmlspecialchars($_REQUEST['user_id']),
-            "UF_TOUCH_POINTS" => htmlspecialchars($_REQUEST['maxTouchPoints']),
-            "UF_PLATFORM" => htmlspecialchars($_REQUEST['platform']),
-            "UF_USERAGENT" => htmlspecialchars($_REQUEST['useragent']),
-            "UF_VENDOR" => htmlspecialchars($_REQUEST['vendor']),
-            "UF_VIEWPORT" => htmlspecialchars($_REQUEST['innerWidth']) . "х" . htmlspecialchars($_REQUEST['innerHeight']),
+            "UF_MESSAGE" => $this->data['message'],
+            "UF_LINE" => $this->data['line'],
+            "UF_URL" => $this->data['url'],
+            "UF_REFERER" => $this->data['referer'],
+            "UF_USER_ID" => $this->data['user_id'],
+            "UF_TOUCH_POINTS" => $this->data['maxTouchPoints'],
+            "UF_PLATFORM" => $this->data['platform'],
+            "UF_USERAGENT" => $this->data['useragent'],
+            "UF_VENDOR" => $this->data['vendor'],
+            "UF_VIEWPORT" => $this->data['innerWidth'] . "х" . $this->data['innerHeight'],
             "UF_TIME" => date("Y-m-d H:i:s"),
-            "UF_UNIQ" => htmlspecialchars($uniq),
-            "UF_SITE" => htmlspecialchars(SITE_ID),
-            "UF_SECONDS" => htmlspecialchars(time()),
-            "UF_HASH" => htmlspecialchars($errorHash),
-            "UF_IP" => htmlspecialchars($userIp),
+            "UF_UNIQ" => $uniq,
+            "UF_SITE" => $this->siteId,
+            "UF_SECONDS" => time(),
+            "UF_HASH" => $errorHash,
+            "UF_IP" => $userIp,
         ];
 
         $log = new Logger('kibana');
         $stream = new StreamHandler($_SERVER['DOCUMENT_ROOT'] . $this->logPath);
-        $stream->setFormatter(new LogstashFormatter);
+        $stream->setFormatter(new LogstashFormatter($this->appName));
         $log->pushHandler($stream);
         $log->warning('frontend_error', $data);
     }
