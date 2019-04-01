@@ -1,0 +1,23 @@
+{
+  "name": "dvasilenko/alterego_tools",
+  "description": "Useful utilities",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Denis",
+      "email": "d.vasilenko@alterego-russia.ru"
+    }
+  ],
+  "require": {
+    "php": ">=7.0",
+    "monolog/monolog": "^1.18"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^6.5"
+  },
+  "autoload": {
+    "classmap": [
+      "src"
+    ]
+  }
+}
