@@ -9,7 +9,7 @@
     }
   ],
   "require": {
-    "php": ">=7.0",
+    "php": ">=7.1",
     "monolog/monolog": "^1.18"
   },
   "require-dev": {
