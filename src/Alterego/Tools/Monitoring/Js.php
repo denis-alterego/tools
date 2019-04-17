@@ -52,7 +52,7 @@ JS;
      *
      * @param Data $data Данные для логирования
      */
-    public function handler(Data $data)
+    public function handler(Data $data): void
     {
         // Отправляем нужные заголовки
         $this->initHeader();
