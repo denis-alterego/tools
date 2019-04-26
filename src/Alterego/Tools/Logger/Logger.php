@@ -17,28 +17,35 @@ class Logger extends AbstractLogger implements LoggerInterface
         $this->dirLog = $dirLog ?: $_SERVER['DOCUMENT_ROOT'] . DS . 'upload' . DS . 'logs' . DS;
     }
 
-    public function log($level, $message, array $context = array())
+    public function log($level, $message, array $context = [])
     {
         $this->addLog("Log-{$level}", $message, $context);
     }
 
-    private static function initDir($dirName)
+    /**
+     * @param string $dirName
+     * @return string
+     * @throws LoggerException
+     */
+    private static function initDir(string $dirName): string
     {
         if (empty($dirName) === true || \is_string($dirName) === false) {
-            self::$errorStack[] = 'Invalid DirName: ' . $dirName;
-            return false;
+            $mess = 'Invalid DirName: ' . $dirName;
+            self::$errorStack[] = $mess;
+            throw new LoggerException($mess);
         }
         $dirLogger = $dirName . self::getActualDirName() . DS;
         if (\file_exists($dirLogger) === false) {
             if (\mkdir($dirLogger, 0755, true) === false) {
-                self::$errorStack[] = 'Not Create Folder: ' . $dirLogger;
-                return false;
+                $mess = 'Not Create Folder: ' . $dirLogger;
+                self::$errorStack[] = $mess;
+                throw new LoggerException($mess);
             }
         }
         return $dirLogger;
     }
 
-    public function addLog(/*args*/)
+    public function addLog(/*args*/): bool
     {
         $args = \func_get_args();
         if (\count($args) < 2) {
@@ -49,11 +56,9 @@ class Logger extends AbstractLogger implements LoggerInterface
         foreach ($args as &$arg) {
             $arg = \print_r($arg, true);
         }
-        $dirLogger = self::initDir($this->dirLog . $key . DS);
-        if ($dirLogger === false)
-            return false;
-
         try {
+            $dirLogger = self::initDir($this->dirLog . $key . DS);
+
             $debug_backtrace = \debug_backtrace();
             \array_shift($debug_backtrace);
             if (is_array($debug_backtrace) === true && empty($debug_backtrace) === false) {
@@ -69,7 +74,7 @@ class Logger extends AbstractLogger implements LoggerInterface
             }
             unset($debug_backtrace);
         } catch (\Exception $e) {
-            //
+            return false;
         }
 
         \array_unshift($args, date('c'));
@@ -82,12 +87,12 @@ class Logger extends AbstractLogger implements LoggerInterface
         return true;
     }
 
-    private static function getActualDirName($format = 'Y-m-d')
+    private static function getActualDirName($format = 'Y-m-d'): string
     {
         return \date($format);
     }
 
-    private static function getFileExtension()
+    private static function getFileExtension(): string
     {
         return self::$fileExtension;
     }

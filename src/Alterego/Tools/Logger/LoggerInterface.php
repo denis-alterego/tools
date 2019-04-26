@@ -4,5 +4,5 @@ namespace Alterego\Tools\Logger;
 
 interface LoggerInterface
 {
-    public function addLog();
+    public function addLog(): bool;
 }

@@ -83,7 +83,7 @@ class Data implements DataInterface
         return true;
     }
 
-    public function setSiteId(string $siteId)
+    public function setSiteId(string $siteId): void
     {
         $this->data['siteId'] = $siteId;
     }

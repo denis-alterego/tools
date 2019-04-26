@@ -10,7 +10,7 @@ interface DataInterface
 
     public function toArray(): array;
 
-    public function setSiteId(string $siteId);
+    public function setSiteId(string $siteId): void;
 
     public function getSiteId(): string;
 }

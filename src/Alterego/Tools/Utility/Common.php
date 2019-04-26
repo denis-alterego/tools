@@ -12,7 +12,7 @@ class Common
      * @param bool $isFloat Выводить как дробное число
      * @return string
      */
-    public static function amount2str($num, $outputKop = false, $isFloat = false): string
+    public static function amount2str($num, bool $outputKop = false, bool $isFloat = false): string
     {
         $nul = 'ноль';
         $ten = [
@@ -29,11 +29,12 @@ class Common
             ['миллион', 'миллиона', 'миллионов', 0],
             ['миллиард', 'милиарда', 'миллиардов', 0],
         ];
-        //
+        // получаем целую и дробную часть
         list($amount, $kop) = explode('.', sprintf("%015.2f", floatval($num)));
 
         $out = [];
         if (intval($amount) > 0) {
+            // разбиваем сумму по три части
             foreach (str_split($amount, 3) as $unitKey => $v) {
                 if (!intval($v))
                     continue;
@@ -53,7 +54,7 @@ class Common
         } else {
             $out[] = $nul;
         }
-
+        // если нужно представлять не как сумму, а как число
         if ($isFloat) {
             $out[] = self::morph(intval($amount), 'целая', 'целых', 'целых');
 
@@ -97,6 +98,7 @@ class Common
      * @param string $one
      * @param string $two
      * @param string $many
+     * @return string
      */
     public static function morph(int $cnt, string $one, string $two, string $many): string
     {
@@ -112,5 +114,44 @@ class Common
             return $one;
 
         return $many;
+    }
+
+    /**
+     * Очищаем телефон от лишних символов
+     * делаем начало с цифры 7
+     *
+     * @param string $phone Непосредственно номер телефона
+     * @param string $addPrefix если нужно добавить символ(ы) перед номером, например "+"
+     * @return strin очищенная строка
+     */
+    public static function clearPhone(string $phone = '', $addPrefix = null): string
+    {
+        // оставляем только цифры
+        $resPhone = preg_replace("/[^0-9]/", "", $phone);
+
+        // если номер не полный и он начинается не с 7 или 8
+        if (strlen($resPhone) === 10 && $resPhone{0} != 7 && $resPhone{0} != 8)
+            $resPhone = '7' . $resPhone;
+        // делаем начало всегда с цифры 7
+        if (strlen($resPhone) === 11)
+            $resPhone = preg_replace("/^(7|8)/", "7", $resPhone);
+        // если нужно задать префикс перед номером телефона
+        if ($addPrefix)
+            $resPhone = $addPrefix . $resPhone;
+
+        return $resPhone;
+    }
+
+    /**
+     * Делаем первый символ с большой буквы для utf
+     * @param string $text Исходный текст
+     * @param string $encoding Кодировка
+     * @return string
+     */
+    public static function mbucfirst(string $text, string $encoding = 'utf-8'): string
+    {
+        if (empty($text)) return '';
+
+        return mb_strtoupper(mb_substr($text, 0, 1, $encoding), $encoding) . mb_substr($text, 1, null, $encoding);
     }
 }

@@ -10,9 +10,7 @@
   ],
   "require": {
     "php": ">=7.1",
-    "monolog/monolog": "^1.18"
-  },
-  "require-dev": {
+    "monolog/monolog": "^1.18",
     "phpunit/phpunit": "^6.5"
   },
   "autoload": {
