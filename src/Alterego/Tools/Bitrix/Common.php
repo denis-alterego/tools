@@ -68,17 +68,17 @@ class Common
     /**
      * Получаем список вариантов для пользовательского поля по объекту и символьному коду поля
      *
-     * @param string $entityId Символьный код сущности (объекта)
+     * @param string $entityCode Символьный код сущности (объекта)
      * @param string $fieldCode Символьный код поля
      * @param array $listId Если нужно ограничить выборку по нескольким элементам списка
      * @param bool $getXmlKey Если нужно, чтобы ключи массива были XML_ID
      * @return array
      * @example getUserFieldVariants("HLBLOCK_1", "UF_REQUEST_TYPE");
      */
-    public static function getUserFieldVariants(string $entityId, string $fieldCode, array $listId = [], bool $getXmlKey = false): array
+    public static function getUserFieldVariants(string $entityCode, string $fieldCode, array $listId = [], bool $getXmlKey = false): array
     {
         // за $GLOBALS["USER_FIELD_MANAGER"] отвечает Bitrix
-        $arUF = $GLOBALS["USER_FIELD_MANAGER"]->GetUserFields($entityId);
+        $arUF = $GLOBALS["USER_FIELD_MANAGER"]->GetUserFields($entityCode);
         $arItems = self::getUserFieldVariantsById($arUF[$fieldCode]['ID'], $listId);
 
         // если нужно, чтобы ключи массива были XML_ID

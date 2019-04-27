@@ -80,7 +80,7 @@ JS;
     private function writeLog(Data $data): void
     {
         $log = new Logger('kibana');
-        $stream = new StreamHandler($_SERVER['DOCUMENT_ROOT'] . $this->options->getLogPath());
+        $stream = new StreamHandler($this->options->getLogPath());
         $stream->setFormatter(new LogstashFormatter($this->options->getAppName()));
         $log->pushHandler($stream);
         $log->warning('frontend_error', $data->toArray());

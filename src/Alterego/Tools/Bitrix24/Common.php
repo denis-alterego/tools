@@ -4,6 +4,7 @@ namespace Alterego\Tools\Bitrix24;
 
 use CCrmStatus;
 use CCrmFieldMulti;
+use Alterego\Tools\Utility;
 
 class Common
 {
@@ -81,7 +82,7 @@ class Common
     {
         $phone_regex = '#^(\+?[\d]) ?\(?([\d]{3})\)? ?([\d]{3})[- ]?([\d]{2})[- ]?([\d]{2})$#';
 
-        preg_match($phone_regex, $phone, $matches);
+        preg_match($phone_regex, Utility\Common::clearPhone($phone), $matches);
         unset($matches[0]);
         unset($matches[1]);
 
@@ -96,9 +97,10 @@ class Common
             ['ID' => 'ASC'],
             $contact_filter
         );
+
         $contacts = [];
         while ($arItem = $dbCrmFieldMulti->Fetch()) {
-            $contacts[] = ['ID' => $arItem['ELEMENT_ID']];
+            $contacts[] = $arItem['ELEMENT_ID'];
         }
         return $contacts;
     }

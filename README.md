@@ -27,7 +27,6 @@ use Alterego\Tools\Monitoring\Options;
 $options = [
     'cookieKey' => 'jsmonitor',
     'appName' => 'Test',
-    'logPath' => '/upload/logs/monolog/kibana/app.log',
 ];
 $jsObj = new Js(
     new Options($options)
@@ -43,20 +42,21 @@ $jsObj->handler($data);
 Логирование
 
 ```
-use Alterego\Tools\Logger\Logger
+use Alterego\Tools\Logger\Logger;
+
 $logger = new Logger($dirLog);// по умолчанию $_SERVER['DOCUMENT_ROOT'] . '/upload/logs/'
 
 // пример вызова
 $logger->addLog($pointname, $data = []);
 // psr
-$logger->debug($message, $context = [])
-$logger->info($message, $context = [])
-$logger->notice($message, $context = [])
-$logger->warning($message, $context = [])
-$logger->error($message, $context = [])
-$logger->critical($message, $context = [])
-$logger->alert($message, $context = [])
-$logger->emergency($message, $context = [])
+$logger->debug($message, $context = []);
+$logger->info($message, $context = []);
+$logger->notice($message, $context = []);
+$logger->warning($message, $context = []);
+$logger->error($message, $context = []);
+$logger->critical($message, $context = []);
+$logger->alert($message, $context = []);
+$logger->emergency($message, $context = []);
 ```
 
 Методы для работы и инфоблоками и свойствами 1C-Bitrix
@@ -109,7 +109,7 @@ Common::getMultiField(string $entity, string $field, int $id): ?string
 // Получаем список значений мультиполя сущности crm
 Common::getMultiFields(string $entity, string $field, int $id): array
 
-// Ищем сущность по номеру телефона
+// Ищем сущность по номеру телефона (должен начинаться на +7|7|8)
 Common::getContactsByPhone(string $phone, string $entity): array
 
 // Получаем список статусов / стадий в зависимости от справочника
@@ -126,8 +126,8 @@ use Alterego\Tools\Utility\Common;
 Common::amount2str(1050.10, true);
 
 // Очистка номера телефона от лишних символов
-Common::clearPhone('9250000000');// 79250000000
-Common::clearPhone('89250000000', '+');// +79250000000
+Common::clearPhone('9(25)000-00-00');// 79250000000
+Common::clearPhone('89(25)000-00-00', '+');// +79250000000
 
 // Начало слова с заглавной буквы для мультибайтовой кодировки
 Common::mbucfirst('текст');// Текст

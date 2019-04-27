@@ -80,7 +80,7 @@ class Options implements OptionsInterface
         $this->cookieKey = $params['cookieKey'] ?? 'jsmonitor';
         $this->userUniq = isset($_COOKIE[$this->cookieKey]) ? htmlspecialchars($_COOKIE[$this->cookieKey]) : '';
         $this->handler = $params['handler'] ?? '/js_server.php';
-        $this->logPath = $params['logPath'] ?? '/upload/logs/monolog/kibana/app.log';
+        $this->logPath = $params['logPath'] ?? $_SERVER['DOCUMENT_ROOT'] . '/upload/logs/monolog/kibana/app.log';
         $this->userId = $params['userId'] ?? 0;
         $this->siteId = $params['siteId'] ?? '';
         $this->appName = $params['appName'] ?? '';
@@ -89,7 +89,7 @@ class Options implements OptionsInterface
     /**
      * @return string
      */
-    public function  getCookieKey(): string
+    public function getCookieKey(): string
     {
         return $this->cookieKey;
     }
@@ -97,7 +97,7 @@ class Options implements OptionsInterface
     /**
      * @return string
      */
-    public function  getUserUniq(): string
+    public function getUserUniq(): string
     {
         return $this->userUniq;
     }
@@ -105,7 +105,7 @@ class Options implements OptionsInterface
     /**
      * @return string
      */
-    public function  getHandler(): string
+    public function getHandler(): string
     {
         return $this->handler;
     }
@@ -113,7 +113,7 @@ class Options implements OptionsInterface
     /**
      * @return string
      */
-    public function  getLogPath(): string
+    public function getLogPath(): string
     {
         return $this->logPath;
     }
@@ -121,7 +121,7 @@ class Options implements OptionsInterface
     /**
      * @return int
      */
-    public function  getUserId(): int
+    public function getUserId(): int
     {
         return $this->userId;
     }
@@ -129,7 +129,7 @@ class Options implements OptionsInterface
     /**
      * @return string
      */
-    public function  getSiteId(): string
+    public function getSiteId(): string
     {
         return $this->siteId;
     }
@@ -137,7 +137,7 @@ class Options implements OptionsInterface
     /**
      * @return string
      */
-    public function  getAppName(): string
+    public function getAppName(): string
     {
         return $this->appName;
     }
