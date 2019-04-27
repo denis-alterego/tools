@@ -5,8 +5,7 @@ use Alterego\Tools\Monitoring\Options;
 
 $options = [
     'cookieKey' => 'jsmonitor',
-    'handler' => '/js_server.php',
-    'logPath' => '/upload/logs/monolog/kibana/app.log',
+    'handler' => '/js_server.php',    
     'userId' => 1000,
 ];
 $jsObj = new Js(
@@ -27,6 +26,7 @@ use Alterego\Tools\Monitoring\Options;
 $options = [
     'cookieKey' => 'jsmonitor',
     'appName' => 'Test',
+    'logPath' => $_SERVER['DOCUMENT_ROOT'] . '/test/upload/logs/monolog/kibana/app.log',
 ];
 $jsObj = new Js(
     new Options($options)
