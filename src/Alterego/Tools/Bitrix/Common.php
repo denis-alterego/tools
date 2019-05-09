@@ -7,8 +7,13 @@ use CUserFieldEnum;
 use CIBlock;
 use CIBlockElement;
 use CIBlockPropertyEnum;
-
+use CBitrixComponent;
 //
+use Alterego\Tools\Utility;
+use Alterego\Tools\Exception\ {
+    PathNotFoundException,
+    ClassNotFoundException
+};
 
 class Common
 {
@@ -196,4 +201,77 @@ class Common
         return $defaultId;
     }
 
+    /**
+     * Получаем данные компонента
+     *
+     * @param string $component
+     * @return ComponentInterface
+     * @throws PathNotFoundException
+     */
+    public static function initComponent(string $component): ComponentInterface
+    {
+        // получаем пространство имен и имя компонента
+        list($nameSpace, $component) = explode(':', $component);
+
+        // получаем путь к компоненту
+        $path = Utility\Common::getFirstExistsPath(
+            $_SERVER['DOCUMENT_ROOT'] . "/local/components/{$nameSpace}/{$component}/",
+            $_SERVER['DOCUMENT_ROOT'] . "/bitrix/components/{$nameSpace}/{$component}/"
+        );
+
+        $classPath = $path . '/class.php';
+        $componentPath = $path . '/component.php';
+
+        try {
+            // подключаем класс компонента и определяем его имя
+            $componentClass = Utility\Common::includeAndGetComponentClass($classPath);
+        } catch (\ReflectionException $e) {
+            $componentClass = '';
+        } catch (ClassNotFoundException $e) {
+            $componentClass = '';
+        }
+        // если компонент не имеет класс, определяем класс по умолчанию
+        if (!class_exists($componentClass)) {
+            $componentClass = 'Alterego\Tools\Bitrix\DefClass';
+        }
+
+        return self::initComponentObject($componentPath, $componentClass);
+    }
+
+    /**
+     * Создаем объект компонента
+     *
+     * @param string $componentPath
+     * @param string $componentClass
+     * @return ComponentInterface
+     */
+    private static function initComponentObject(string $componentPath, string $componentClass): ComponentInterface
+    {
+        // т.к. не можем наследоваться от переменной, задаем алиас для класса
+        class_alias($componentClass, 'ComponentClass');
+
+        return new class($componentPath) extends \ComponentClass implements ComponentInterface
+        {
+            private $componentPath;
+
+            public function __construct(string $componentPath)
+            {
+                $this->componentPath = $componentPath;
+            }
+
+            public function exec(): array
+            {
+                global $DB, $USER, $APPLICATION;
+
+                $arResult = [];
+
+                // если есть файл компонента, подключаем его
+                if (file_exists($this->componentPath))
+                    include_once $this->componentPath;
+
+                // на случай если в классе компонента определены значения для свойства
+                return array_merge($arResult, $this->arResult);
+            }
+        };
+    }
 }

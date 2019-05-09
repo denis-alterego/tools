@@ -2,6 +2,9 @@
 
 namespace Alterego\Tools\Utility;
 
+use Alterego\Tools\Exception\PathNotFoundException;
+use Alterego\Tools\Exception\ClassNotFoundException;
+
 class Common
 {
     /**
@@ -153,5 +156,57 @@ class Common
         if (empty($text)) return '';
 
         return mb_strtoupper(mb_substr($text, 0, 1, $encoding), $encoding) . mb_substr($text, 1, null, $encoding);
+    }
+
+    /**
+     * Возвращаем первый существующий путь
+     *
+     * @param string ...$args
+     * @return string
+     * @throws PathNotFoundException
+     */
+    public static function getFirstExistsPath(string ...$args): string
+    {
+        foreach ($args as $path) {
+            if (file_exists($path))
+                return $path;
+        }
+
+        throw new PathNotFoundException('По указанному пути, файлы не найдены');
+    }
+
+    /**
+     * Подключаем класс компонента и возвращаем его имя
+     *
+     * @param string $classPath
+     * @return string
+     * @throws ClassNotFoundException
+     * @throws \ReflectionException
+     */
+    public function includeAndGetComponentClass(string $classPath): string
+    {
+        if (!file_exists($classPath))
+            throw new ClassNotFoundException('Класс компонента не найден');
+
+        // получаем список классов
+        $classesBefore = get_declared_classes();
+        // подключаем класс компонента
+        require_once $classPath;
+        // получаем список классов
+        $classesAfter = get_declared_classes();
+        // получаем список классов компонента
+        $diff = array_diff($classesAfter, $classesBefore);
+
+        // Находим класс компонента и возвращаем его имя
+        foreach ($diff as $k => $className) {
+            $class = new \ReflectionClass($className);
+            if ($parent = $class->getParentClass()) {
+                if ($parent->getName() == 'CBitrixComponent') {
+                    return $className;
+                }
+            }
+        }
+
+        throw new ClassNotFoundException('Класс компонента не найден');
     }
 }

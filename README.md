@@ -132,3 +132,16 @@ Common::clearPhone('89(25)000-00-00', '+');// +79250000000
 // Начало слова с заглавной буквы для мультибайтовой кодировки
 Common::mbucfirst('текст');// Текст
 ```
+
+Тестирование компонентов Bitrix
+```
+use Alterego\Tools\Bitrix\Common;
+use Alterego\Tools\Exception\PathNotFoundException;
+
+try {
+    $componentObj = Common::initComponent('namespace:componentName');
+    $arResult = $componentObj->exec();
+} catch (PathNotFoundException $e){
+    
+}
+```
