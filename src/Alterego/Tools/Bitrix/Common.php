@@ -225,9 +225,7 @@ class Common
         try {
             // подключаем класс компонента и определяем его имя
             $componentClass = Utility\Common::includeAndGetComponentClass($classPath);
-        } catch (\ReflectionException $e) {
-            $componentClass = '';
-        } catch (ClassNotFoundException $e) {
+        } catch (\ReflectionException | ClassNotFoundException $e) {
             $componentClass = '';
         }
         // если компонент не имеет класс, определяем класс по умолчанию

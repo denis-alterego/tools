@@ -1,7 +1,9 @@
 Для генерации JavaScript обработчика ошибок
 ```
-use Alterego\Tools\Monitoring\Js;
-use Alterego\Tools\Monitoring\Options;
+use Alterego\Tools\Monitoring\ {
+    Js,
+    Options
+};
 
 $options = [
     'cookieKey' => 'jsmonitor',
@@ -19,9 +21,11 @@ echo $jsObj->getJs();
 
 Обработка на стороне сервера
 ```
-use Alterego\Tools\Monitoring\Js;
-use Alterego\Tools\Monitoring\Data;
-use Alterego\Tools\Monitoring\Options;
+use Alterego\Tools\Monitoring\ {
+    Js,
+    Data,
+    Options
+};
 
 $options = [
     'cookieKey' => 'jsmonitor',
@@ -117,6 +121,36 @@ Common::getContactsByPhone(string $phone, string $entity): array
 Common::getCrmStatusByEntityId(string $entityId): array
 ```
 
+Тестирование компонентов Bitrix
+```
+use Alterego\Tools\Bitrix\Common;
+use Alterego\Tools\Exception\PathNotFoundException;
+
+try {
+    $componentObj = Common::initComponent('namespace:componentName');
+    $arResult = $componentObj->exec();
+} catch (PathNotFoundException $e){
+    
+}
+```
+
+Получить рекомендацию по полям HighLoad блоков
+```
+use Alterego\Tools\Bitrix\Db {
+    HighLoadHelper,
+    Db
+};
+
+$HighLoadHelper = new HighLoadHelper;
+$HighLoadHelper->setDb(new Db);// Наследует системный класс CDatabase Bitrix
+
+// проверить все HL блоки по связанным полям
+$result = $HighLoadHelper->checkHighLoadTables();
+
+// проверить произвольную таблицу с произвольными полями для которых должен быть индекс
+$result = $HighLoadHelper->checkTableFields('имя_таблицы', [/*массив полей*/]);
+``` 
+
 Общее
 
 ```
@@ -131,17 +165,4 @@ Common::clearPhone('89(25)000-00-00', '+');// +79250000000
 
 // Начало слова с заглавной буквы для мультибайтовой кодировки
 Common::mbucfirst('текст');// Текст
-```
-
-Тестирование компонентов Bitrix
-```
-use Alterego\Tools\Bitrix\Common;
-use Alterego\Tools\Exception\PathNotFoundException;
-
-try {
-    $componentObj = Common::initComponent('namespace:componentName');
-    $arResult = $componentObj->exec();
-} catch (PathNotFoundException $e){
-    
-}
 ```
