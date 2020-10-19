@@ -10,8 +10,8 @@
   ],
   "require": {
     "php": ">=7.1",
-    "monolog/monolog": "^1.18",
-    "phpunit/phpunit": "^6.5"
+    "monolog/monolog": "*",
+    "phpunit/phpunit": "*"
   },
   "autoload": {
     "classmap": [
